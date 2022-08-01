@@ -36,6 +36,36 @@ async function setupContracts() {
   initialSupply = await uFragments.totalSupply()
 }
 
+describe("CEEU:deployment", function() {
+  it('check that deployment works', async () => {
+    accounts = await ethers.getSigners()
+    deployer = accounts[0]
+    let policy = accounts[1]
+    let policyAddress = await policy.getAddress()
+
+    const CEEU = await ethers.getContractFactory("CEEU");
+    const CEEUV2 = await ethers.getContractFactory("CEEUV2");
+
+    const instance = await upgrades.deployProxy(
+      CEEUV2, 
+      [await deployer.getAddress()],
+      {
+        initializer: 'initialize(address)',
+      },
+    );
+
+    instance.setMonetaryPolicy(policyAddress);
+
+    const upgraded = await upgrades.upgradeProxy(
+      instance.address, 
+      CEEU
+    );
+
+    const addressStored = await upgraded.getMonetaryPolicy();
+    expect(addressStored).to.equal(policyAddress);
+  });
+});
+
 describe('CEEU', () => {
   before('setup CEEU contract', setupContracts)
 
@@ -510,5 +540,77 @@ describe('CEEU:Transfer', function () {
           ),
       ).to.be.reverted
     })
+  })
+
+  describe('Modifying blacklist address correctly', function () {
+    let policy: Signer, policyAddress: string
+
+    before('setup CEEU contract', async () => {
+      await setupContracts()
+      policy = accounts[1]
+      policyAddress = await policy.getAddress()
+      await uFragments.addBlacklistAddress(policyAddress)
+      await uFragments.removeBlacklistAddress(deployer.getAddress())
+    })
+
+    it('address that was added should be in list', async function () {
+      expect(await uFragments.isAddressBlacklisted(policyAddress)).to.eq(true)
+    })
+
+    it('address that was removed should not be in list', async function () {
+      expect(await uFragments.isAddressBlacklisted(deployer.getAddress())).to.eq(false)
+    })
+
+  })
+
+  describe('CEEU:getBlackListedSupply', function () {
+    let policy: Signer, policyAddress: string
+
+    before('setup CEEU contract', async () => {
+      await setupContracts()
+      policy = accounts[1]
+      policyAddress = await policy.getAddress()
+      await uFragments.addBlacklistAddress(policyAddress)
+    })
+
+    it('blacklisted supply is equal to initial supply after init', async function () {
+      expect(await uFragments.getBlackListedSupply()).to.eq(INITIAL_SUPPLY)
+    })
+
+    it('blacklisted supply is 0 when blacklisted address have no balance', async function () {
+      await uFragments.removeBlacklistAddress(deployer.getAddress())
+
+      expect(await uFragments.getBlackListedSupply()).to.eq(0)
+    })
+
+  })
+
+  describe('CEEU:getVotes', function () {
+    let policy: Signer, policyAddress: string
+
+    before('setup CEEU contract', async () => {
+      await setupContracts()
+      policy = accounts[1]
+      policyAddress = await policy.getAddress()
+
+      await uFragments.addBlacklistAddress(policyAddress)
+    })
+
+    it('blacklisted address has 0 votes', async function () {
+      let addressWithNobalance = await (accounts[2].getAddress())
+      expect(await uFragments.getVotes(addressWithNobalance)).to.eq(0)
+      expect(await uFragments.getVotes(deployer.getAddress())).to.eq(0)
+    })
+
+    it('voting power is 100 for address with entire supply', async function () {
+      await uFragments.removeBlacklistAddress(deployer.getAddress())
+      expect(await uFragments.getVotes(deployer.getAddress())).to.eq(100)
+    })
+
+    it('voting power is 100 for address with entire supply', async function () {
+      await uFragments.removeBlacklistAddress(deployer.getAddress())
+      expect(await uFragments.getVotes(deployer.getAddress())).to.eq(100)
+    })
+
   })
 })

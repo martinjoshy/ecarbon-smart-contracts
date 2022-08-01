@@ -11,7 +11,7 @@ import { Denomination } from './utils/Denomination'
 import './utils/type-extensions'
 require('./scripts/deploy')
 require('./scripts/index')
-import { alchemyMainnetApi, alchemyRopstenApi, mnemonic } from './secrets.json'
+import { alchemyMainnetApi, alchemyRopstenApi, alchemyRinkebyApi, mnemonic } from './secrets.json'
 
 extendEnvironment((hre) => {
   hre.getCEEUDenom = lazyObject(() => new Denomination())
@@ -34,6 +34,10 @@ export default {
       accounts: { mnemonic: mnemonic },
       gas: 4600000,
       gasPrice: 100000000000,
+    },
+    rinkeby: {
+      url: alchemyRinkebyApi,
+      accounts: { mnemonic: mnemonic },
     },
     mainnet: {
       url: alchemyMainnetApi,

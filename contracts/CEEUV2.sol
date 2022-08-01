@@ -7,16 +7,10 @@ import "./_external/ERC20Detailed.sol";
 import "./lib/SafeMathInt.sol";
 
 /**
- * @title uFragments ERC20 token
- * @dev This is part of an implementation of the uFragments Ideal Money protocol.
- *      uFragments is a normal ERC20 token, but its supply can be adjusted by splitting and
- *      combining tokens proportionally across all wallets.
- *
- *      uFragment balances are internally represented with a hidden denomination, 'gons'.
- *      We support splitting the currency in expansion and combining the currency on contraction by
- *      changing the exchange rate between the hidden 'gons' and the public 'fragments'.
+ * @title CEEUV2 ERC20 token
+ * @dev This is a test contract written to make sure deploying an upgrade works
  */
-contract CEEU is ERC20Detailed, Ownable {
+contract CEEUV2 is ERC20Detailed, Ownable {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
@@ -40,7 +34,6 @@ contract CEEU is ERC20Detailed, Ownable {
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
     event LogMonetaryPolicyUpdated(address monetaryPolicy);
 
-    // Used for authentication
     address public monetaryPolicy;
 
     modifier onlyMonetaryPolicy() {
@@ -89,46 +82,12 @@ contract CEEU is ERC20Detailed, Ownable {
     // EIP-2612: keeps track of number of permits per address
     mapping(address => uint256) private _nonces;
 
-    // This variable is for governance so that we can exclude address from counting towards votes
-    address[] private _blacklistedAddress;
-
-    function addBlacklistAddress(address addressToAdd) external onlyOwner {
-        _blacklistedAddress.push(addressToAdd);
-    }
-
-    function isAddressBlacklisted(address address_) public view returns (bool) {
-        for (uint i=0; i < _blacklistedAddress.length; i++) {
-            if (address_ == _blacklistedAddress[i]) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function removeBlacklistAddress(address addressToRemove) external onlyOwner {
-        for (uint i=0; i < _blacklistedAddress.length; i++) {
-            if (addressToRemove == _blacklistedAddress[i]) {
-                _blacklistedAddress[i] = _blacklistedAddress[_blacklistedAddress.length - 1];
-                delete _blacklistedAddress[_blacklistedAddress.length - 1];
-                break;
-            }
-        }
-
-    }
-
     /**
      * @param monetaryPolicy_ The address of the monetary policy contract to use for authentication.
      */
     function setMonetaryPolicy(address monetaryPolicy_) external onlyOwner {
         monetaryPolicy = monetaryPolicy_;
         emit LogMonetaryPolicyUpdated(monetaryPolicy_);
-    }
-
-    /** 
-     * @return Address of current monetary policy implementation.
-     */
-    function getMonetaryPolicy() public view returns (address) {
-        return monetaryPolicy;
     }
 
     /**
@@ -187,7 +146,6 @@ contract CEEU is ERC20Detailed, Ownable {
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
         _gonBalances[owner_] = TOTAL_GONS;
         _gonsPerFragment = TOTAL_GONS.div(_totalSupply);
-        _blacklistedAddress.push(owner_);
 
         emit Transfer(address(0x0), owner_, _totalSupply);
     }
@@ -195,7 +153,7 @@ contract CEEU is ERC20Detailed, Ownable {
     /**
      * @return The total number of fragments.
      */
-    function totalSupply() public override view returns (uint256) {
+    function totalSupply() external override view returns (uint256) {
         return _totalSupply;
     }
 
@@ -203,42 +161,9 @@ contract CEEU is ERC20Detailed, Ownable {
      * @param who The address to query.
      * @return The balance of the specified address.
      */
-    function balanceOf(address who) public override view returns (uint256) {
+    function balanceOf(address who) external override view returns (uint256) {
         return _gonBalances[who].div(_gonsPerFragment);
     }
-
-    /**
-     * @param who The address to query.
-     * @return The voting power of the specified address.
-     */
-    function getVotes(address who) external view returns (uint256) {
-        if (isAddressBlacklisted(who)) {
-            return 0;
-        }
-
-        uint balanceOfWho = _gonBalances[who].div(_gonsPerFragment);
-        if (balanceOfWho == 0) {
-            return 0;
-        }
-        
-        uint outstandingSupply = totalSupply().sub(getBlackListedSupply());
-
-        return outstandingSupply.div(balanceOfWho).mul(100);
-    }
-
-    /**
-     * @return The total number of tokens owned by addresses that are blacklisted
-     */
-    function getBlackListedSupply() public view returns (uint256) {
-        uint blacklistedSupply = 0;
-        for (uint i=0; i < _blacklistedAddress.length; i++) {
-            blacklistedSupply += balanceOf(_blacklistedAddress[i]);
-        }
-
-        return blacklistedSupply;
-    }
-
-
 
     /**
      * @param who The address to query.
