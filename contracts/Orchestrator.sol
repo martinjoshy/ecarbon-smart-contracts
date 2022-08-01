@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 import "./_external/Ownable.sol";
 
 import "./UFragmentsPolicy.sol";
+import "./Oracle.sol";
 
 /**
  * @title Orchestrator
@@ -22,10 +23,12 @@ contract Orchestrator is Ownable {
     Transaction[] public transactions;
 
     CEEUPolicy public policy;
+    Oracle oracle;
 
-    constructor(address policy_) public {
+    constructor(address policy_, address oracle_) public {
         Ownable.initialize(msg.sender);
         policy = CEEUPolicy(policy_);
+        oracle = Oracle(oracle_);
     }
 
     /**
@@ -39,6 +42,7 @@ contract Orchestrator is Ownable {
     function rebase(uint256 avgTradingPrice, uint256 euaContractPrice) external {
         require(msg.sender == tx.origin); // solhint-disable-line avoid-tx-origin
 
+ git status       (string memory latestTargetPrice, string memory latestCurrentPrice) = oracle.getLatestPrices();
         policy.rebase(avgTradingPrice, euaContractPrice);
 
         for (uint256 i = 0; i < transactions.length; i++) {
@@ -125,4 +129,19 @@ contract Orchestrator is Ownable {
         }
         return result;
     }
+
+    /**
+     * @param policy_ address of new policy contract
+     */
+    function ChangePolicy(address policy_) external onlyOwner {
+        policy = CEEUPolicy(policy_);
+    }
+
+    /**
+     * @param oracle_ address of new oracle contract
+     */
+    function ChangeOracle(address oracle_) external onlyOwner {
+        oracle = Oracle(oracle_);
+    }
+
 }

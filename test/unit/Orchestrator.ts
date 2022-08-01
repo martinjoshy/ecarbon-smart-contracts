@@ -4,7 +4,7 @@ import { increaseTime } from '../utils/utils'
 import { expect } from 'chai'
 import { TransactionResponse } from '@ethersproject/providers'
 
-let orchestrator: Contract, mockPolicy: Contract, mockDownstream: Contract
+let orchestrator: Contract, mockPolicy: Contract, mockDownstream: Contract, mockOracle: Contract
 let r: Promise<TransactionResponse>
 let deployer: Signer, user: Signer
 
@@ -15,15 +15,23 @@ async function mockedOrchestrator() {
   await increaseTime(86400)
   // get signers
   const [deployer, user] = await ethers.getSigners()
+
   // deploy mocks
   const mockPolicy = await (
     await ethers.getContractFactory('MockUFragmentsPolicy')
   )
     .connect(deployer)
     .deploy()
+
+  const mockOracle = await (
+    await ethers.getContractFactory('MockOracle')
+  )
+    .connect(deployer)
+    .deploy()
+
   const orchestrator = await (await ethers.getContractFactory('Orchestrator'))
     .connect(deployer)
-    .deploy(mockPolicy.address)
+    .deploy(mockPolicy.address, mockOracle.address)
   const mockDownstream = await (
     await ethers.getContractFactory('MockDownstream')
   )
@@ -34,6 +42,7 @@ async function mockedOrchestrator() {
     user,
     orchestrator,
     mockPolicy,
+    mockOracle,
     mockDownstream,
   }
 }
@@ -45,6 +54,7 @@ describe('Orchestrator', function () {
       user,
       orchestrator,
       mockPolicy,
+      mockOracle,
       mockDownstream,
     } = await waffle.loadFixture(mockedOrchestrator))
   })
@@ -93,8 +103,14 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+    
     it('should not have any subsequent logs', async function () {
-      expect((await (await r).wait()).logs.length).to.eq(1)
+      expect((await (await r).wait()).logs.length).to.eq(2)
     })
   })
 
@@ -121,6 +137,12 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+
     it('should call the transaction', async function () {
       await expect(r)
         .to.emit(mockDownstream, 'FunctionCalled')
@@ -132,7 +154,7 @@ describe('Orchestrator', function () {
     })
 
     it('should not have any subsequent logs', async function () {
-      expect((await (await r).wait()).logs.length).to.eq(3)
+      expect((await (await r).wait()).logs.length).to.eq(4)
     })
   })
 
@@ -160,6 +182,12 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+
     it('should call first transaction', async function () {
       await expect(r)
         .to.emit(mockDownstream, 'FunctionCalled')
@@ -181,7 +209,7 @@ describe('Orchestrator', function () {
     })
 
     it('should not have any subsequent logs', async function () {
-      expect((await (await r).wait()).logs.length).to.eq(5)
+      expect((await (await r).wait()).logs.length).to.eq(6)
     })
   })
 
@@ -205,6 +233,12 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+
     it('should call second transaction', async function () {
       await expect(r)
         .to.emit(mockDownstream, 'FunctionCalled')
@@ -216,7 +250,7 @@ describe('Orchestrator', function () {
     })
 
     it('should not have any subsequent logs', async function () {
-      expect(await (await (await r).wait()).logs.length).to.eq(3)
+      expect(await (await (await r).wait()).logs.length).to.eq(4)
     })
   })
 
@@ -238,6 +272,12 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+
     it('should call the transaction', async function () {
       await expect(r)
         .to.emit(mockDownstream, 'FunctionCalled')
@@ -249,7 +289,7 @@ describe('Orchestrator', function () {
     })
 
     it('should not have any subsequent logs', async function () {
-      expect((await (await r).wait()).logs.length).to.eq(3)
+      expect((await (await r).wait()).logs.length).to.eq(4)
     })
   })
 
@@ -271,8 +311,14 @@ describe('Orchestrator', function () {
         .withArgs('CEEUPolicy', 'rebase', orchestrator.address)
     })
 
+    it('should call getLatestPrices on oracle', async function () {
+      await expect(r)
+        .to.emit(mockOracle, 'FunctionCalled')
+        .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
+    })
+
     it('should not have any subsequent logs', async function () {
-      expect((await (await r).wait()).logs.length).to.eq(1)
+      expect((await (await r).wait()).logs.length).to.eq(2)
     })
   })
 
