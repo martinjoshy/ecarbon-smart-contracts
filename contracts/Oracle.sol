@@ -1,7 +1,6 @@
 pragma solidity 0.6.12;
 
 contract Oracle {
-
     string private latestCurrentPrice;
     string private latestTargetPrice;
 
@@ -23,7 +22,7 @@ contract Oracle {
         return (latestCurrentPrice, latestTargetPrice);
     }
 
-        /**
+    /**
      * @return latestTargetPrice on success
      */
     function getLatestTargetPrice() external view returns (string memory) {

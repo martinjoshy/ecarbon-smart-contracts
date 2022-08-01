@@ -42,7 +42,8 @@ contract Orchestrator is Ownable {
     function rebase(uint256 avgTradingPrice, uint256 euaContractPrice) external {
         require(msg.sender == tx.origin); // solhint-disable-line avoid-tx-origin
 
- git status       (string memory latestTargetPrice, string memory latestCurrentPrice) = oracle.getLatestPrices();
+        (string memory latestTargetPrice, string memory latestCurrentPrice) =
+            oracle.getLatestPrices();
         policy.rebase(avgTradingPrice, euaContractPrice);
 
         for (uint256 i = 0; i < transactions.length; i++) {
@@ -143,5 +144,5 @@ contract Orchestrator is Ownable {
     function ChangeOracle(address oracle_) external onlyOwner {
         oracle = Oracle(oracle_);
     }
-
+    
 }

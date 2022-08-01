@@ -4,7 +4,10 @@ import { increaseTime } from '../utils/utils'
 import { expect } from 'chai'
 import { TransactionResponse } from '@ethersproject/providers'
 
-let orchestrator: Contract, mockPolicy: Contract, mockDownstream: Contract, mockOracle: Contract
+let orchestrator: Contract,
+  mockPolicy: Contract,
+  mockDownstream: Contract,
+  mockOracle: Contract
 let r: Promise<TransactionResponse>
 let deployer: Signer, user: Signer
 
@@ -23,9 +26,7 @@ async function mockedOrchestrator() {
     .connect(deployer)
     .deploy()
 
-  const mockOracle = await (
-    await ethers.getContractFactory('MockOracle')
-  )
+  const mockOracle = await (await ethers.getContractFactory('MockOracle'))
     .connect(deployer)
     .deploy()
 
@@ -108,7 +109,7 @@ describe('Orchestrator', function () {
         .to.emit(mockOracle, 'FunctionCalled')
         .withArgs('Oracle', 'getLatestPrices', orchestrator.address)
     })
-    
+
     it('should not have any subsequent logs', async function () {
       expect((await (await r).wait()).logs.length).to.eq(2)
     })
