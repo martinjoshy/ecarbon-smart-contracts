@@ -144,5 +144,4 @@ contract Orchestrator is Ownable {
     function ChangeOracle(address oracle_) external onlyOwner {
         oracle = Oracle(oracle_);
     }
-    
 }
