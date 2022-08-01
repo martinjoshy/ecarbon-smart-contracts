@@ -11,7 +11,12 @@ import { Denomination } from './utils/Denomination'
 import './utils/type-extensions'
 require('./scripts/deploy')
 require('./scripts/index')
-import { alchemyMainnetApi, alchemyRopstenApi, alchemyRinkebyApi, mnemonic } from './secrets.json'
+import {
+  alchemyMainnetApi,
+  alchemyRopstenApi,
+  alchemyRinkebyApi,
+  mnemonic,
+} from './secrets.json'
 
 extendEnvironment((hre) => {
   hre.getCEEUDenom = lazyObject(() => new Denomination())

@@ -72,12 +72,14 @@ contract CEEUV2 is ERC20Detailed, Ownable {
     // EIP-2612: permit – 712-signed approvals
     // https://eips.ethereum.org/EIPS/eip-2612
     string public constant EIP712_REVISION = "1";
-    bytes32 public constant EIP712_DOMAIN = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-    );
-    bytes32 public constant PERMIT_TYPEHASH = keccak256(
-        "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-    );
+    bytes32 public constant EIP712_DOMAIN =
+        keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+    bytes32 public constant PERMIT_TYPEHASH =
+        keccak256(
+            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+        );
 
     // EIP-2612: keeps track of number of permits per address
     mapping(address => uint256) private _nonces;
@@ -153,7 +155,7 @@ contract CEEUV2 is ERC20Detailed, Ownable {
     /**
      * @return The total number of fragments.
      */
-    function totalSupply() external override view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
 
@@ -161,7 +163,7 @@ contract CEEUV2 is ERC20Detailed, Ownable {
      * @param who The address to query.
      * @return The balance of the specified address.
      */
-    function balanceOf(address who) external override view returns (uint256) {
+    function balanceOf(address who) external view override returns (uint256) {
         return _gonBalances[who].div(_gonsPerFragment);
     }
 
@@ -257,7 +259,7 @@ contract CEEUV2 is ERC20Detailed, Ownable {
      * @param spender The address which will spend the funds.
      * @return The number of tokens still available for the spender.
      */
-    function allowance(address owner_, address spender) external override view returns (uint256) {
+    function allowance(address owner_, address spender) external view override returns (uint256) {
         return _allowedFragments[owner_][spender];
     }
 
@@ -384,12 +386,10 @@ contract CEEUV2 is ERC20Detailed, Ownable {
         require(block.timestamp <= deadline);
 
         uint256 ownerNonce = _nonces[owner];
-        bytes32 permitDataDigest = keccak256(
-            abi.encode(PERMIT_TYPEHASH, owner, spender, value, ownerNonce, deadline)
-        );
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), permitDataDigest)
-        );
+        bytes32 permitDataDigest =
+            keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, ownerNonce, deadline));
+        bytes32 digest =
+            keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), permitDataDigest));
 
         require(owner == ecrecover(digest, v, r, s));
 

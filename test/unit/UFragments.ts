@@ -36,35 +36,32 @@ async function setupContracts() {
   initialSupply = await uFragments.totalSupply()
 }
 
-describe("CEEU:deployment", function() {
+describe('CEEU:deployment', function () {
   it('check that deployment works', async () => {
     accounts = await ethers.getSigners()
     deployer = accounts[0]
     let policy = accounts[1]
     let policyAddress = await policy.getAddress()
 
-    const CEEU = await ethers.getContractFactory("CEEU");
-    const CEEUV2 = await ethers.getContractFactory("CEEUV2");
+    const CEEU = await ethers.getContractFactory('CEEU')
+    const CEEUV2 = await ethers.getContractFactory('CEEUV2')
 
     const instance = await upgrades.deployProxy(
-      CEEUV2, 
+      CEEUV2,
       [await deployer.getAddress()],
       {
         initializer: 'initialize(address)',
       },
-    );
+    )
 
-    instance.setMonetaryPolicy(policyAddress);
+    instance.setMonetaryPolicy(policyAddress)
 
-    const upgraded = await upgrades.upgradeProxy(
-      instance.address, 
-      CEEU
-    );
+    const upgraded = await upgrades.upgradeProxy(instance.address, CEEU)
 
-    const addressStored = await upgraded.getMonetaryPolicy();
-    expect(addressStored).to.equal(policyAddress);
-  });
-});
+    const addressStored = await upgraded.getMonetaryPolicy()
+    expect(addressStored).to.equal(policyAddress)
+  })
+})
 
 describe('CEEU', () => {
   before('setup CEEU contract', setupContracts)
@@ -558,9 +555,10 @@ describe('CEEU:Transfer', function () {
     })
 
     it('address that was removed should not be in list', async function () {
-      expect(await uFragments.isAddressBlacklisted(deployer.getAddress())).to.eq(false)
+      expect(
+        await uFragments.isAddressBlacklisted(deployer.getAddress()),
+      ).to.eq(false)
     })
-
   })
 
   describe('CEEU:getBlackListedSupply', function () {
@@ -582,7 +580,6 @@ describe('CEEU:Transfer', function () {
 
       expect(await uFragments.getBlackListedSupply()).to.eq(0)
     })
-
   })
 
   describe('CEEU:getVotes', function () {
@@ -597,7 +594,7 @@ describe('CEEU:Transfer', function () {
     })
 
     it('blacklisted address has 0 votes', async function () {
-      let addressWithNobalance = await (accounts[2].getAddress())
+      let addressWithNobalance = await accounts[2].getAddress()
       expect(await uFragments.getVotes(addressWithNobalance)).to.eq(0)
       expect(await uFragments.getVotes(deployer.getAddress())).to.eq(0)
     })
@@ -611,6 +608,5 @@ describe('CEEU:Transfer', function () {
       await uFragments.removeBlacklistAddress(deployer.getAddress())
       expect(await uFragments.getVotes(deployer.getAddress())).to.eq(100)
     })
-
   })
 })
